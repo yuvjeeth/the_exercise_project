@@ -1,7 +1,10 @@
 library the_exercise_project.globals;
 
+import 'package:the_exercise_project/models/exercise.dart';
+
 List<String> exerciseNames = ["Push-ups", "Pull-ups"];
-List<String> exercisesImages = [
+
+List<String> exerciseImages = [
   "assets/images/ExercisePics/Pushups.png",
   "assets/images/ExercisePics/Pullups.jpg"
 ];
@@ -12,4 +15,20 @@ List<String> exerciseDescriptions = [
 List<String> exerciseVideoUrls = [
   "https://www.youtube.com/watch?v=IODxDxX7oi4&t=1s",
   "https://www.youtube.com/watch?v=eGo4IYlbE5g"
+];
+//List<String> currentWorkout = ["Push-ups","Pull-Ups"];
+
+List<Exercise> currentWorkout = [
+  Exercise(
+      name: exerciseNames[0],
+      imageURL: exerciseImages[0],
+      videoURL: exerciseVideoUrls[0],
+      description: exerciseDescriptions[0],
+      exerciseType: "Strength"),
+  Exercise(
+      name: exerciseNames[1],
+      imageURL: exerciseImages[1],
+      videoURL: exerciseVideoUrls[1],
+      description: exerciseDescriptions[1],
+      exerciseType: "Cardio")
 ];
