@@ -3,9 +3,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:the_exercise_project/global_data.dart' as global;
-import 'package:url_launcher/url_launcher.dart';
 
 class ExerciseDetailsScreen extends StatefulWidget {
   const ExerciseDetailsScreen({Key? key, required this.index})
@@ -22,6 +22,8 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
 
   void test() {}
 
+
+//Launches Youtube for the video of the exercise
   void launchVideo() async {
     Uri url = Uri.parse(global.exerciseVideoUrls[widget.index]);
     if (!await launchUrl(url)) log('Could not launch $url');

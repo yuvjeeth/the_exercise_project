@@ -6,11 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:the_exercise_project/home_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+
+  final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
   @override
   Widget build(BuildContext context) {

@@ -1,8 +1,13 @@
+//TODO
+//Pause workout timer when app goes into background
+
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:the_exercise_project/exercise_details.dart';
-
+import 'package:the_exercise_project/models/exercise.dart';
 import 'package:the_exercise_project/global_data.dart' as global;
 
 class ExerciseScreen extends StatefulWidget {
@@ -13,52 +18,187 @@ class ExerciseScreen extends StatefulWidget {
 }
 
 class _ExerciseScreen extends State<ExerciseScreen> {
+  bool isInForeground = true;
   CarouselController carouselController = CarouselController();
-
+  Timer exerciseTimer = Timer(Duration(seconds: 1), () => null);
+  bool exerciseTimerEnabled = true;
   int currentExerciseIndex = 1;
 
-  int repCountValue = 0;
+  void initState() {
+    super.initState();
+    setState(() {
+      global.currentWorkout[currentExerciseIndex - 1].currentValue =
+          global.currentWorkout[currentExerciseIndex - 1].totalValue;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  void dispose() {
+    super.dispose();
+  }
 
   void test() {}
 
+//Pauses workout session
+  void pauseWorkout() {
+    exerciseTimerEnabled = false;
+    pauseWorkoutBottomSheet();
+  }
+
+//Changes the current exercise, if next is true goes next, else goes previous
   void changeExercise(bool next) {
     next ? carouselController.nextPage() : carouselController.previousPage();
   }
 
-  void performExercise(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExerciseDetailsScreen(
-          index: index,
-        ),
-      ),
-    );
+//Called after each exercise is successfully completed
+  void exerciseFinished() {
+    //Logic for saving the current exercise as done goes here
+    carouselController.nextPage();
   }
 
-  void onCarouselPageChanged(int index, CarouselPageChangedReason reason) {
-    setState(() {
-      currentExerciseIndex = index + 1;
+//Handles routing to the ExerciseDetails route and pauses the exercise timer
+  void exerciseInfo(int index) {
+    exerciseTimerEnabled = false;
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) => ExerciseDetailsScreen(
+                  index: index,
+                )))
+        .then((value) {
+      exerciseTimerEnabled = true;
     });
   }
 
+  void onCarouselPageChanged(int index, CarouselPageChangedReason reason) {
+    //Dispose the timer if it's already running
+    if (exerciseTimer != null) {
+      exerciseTimer.cancel();
+    }
+
+    //Update the currentExerciseIndex variable to reflect in the appBar and other sections
+    setState(() {
+      currentExerciseIndex = index + 1;
+      global.currentWorkout[currentExerciseIndex - 1].currentValue =
+          global.currentWorkout[currentExerciseIndex - 1].totalValue;
+    });
+
+    //Start the timer if the current exercise is cardio or rest. If it's strength don't start the timer
+    if (global.currentWorkout[currentExerciseIndex - 1].exerciseType !=
+        ExerciseType.strength) {
+      exerciseTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (exerciseTimerEnabled) {
+          if (global.currentWorkout[currentExerciseIndex - 1].currentValue >
+              0) {
+            setState(() {
+              global.currentWorkout[currentExerciseIndex - 1]
+                  .currentValue--; //Downtimer from exercise time to zero
+            });
+          } else {
+            exerciseFinished(); //If timer reaches zero, consider exercise is finished
+            exerciseTimer.cancel();
+          }
+        }
+      });
+    }
+  }
+
+//Bring up a Bottom Sheet that shows that the workout session is paused
   void pauseWorkoutBottomSheet() {
     showModalBottomSheet<void>(
         isDismissible: true,
         context: context,
         elevation: 15,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+          ),
         ),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setModalState) {
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Workout Paused",
-                    style: TextStyle(fontSize: 22),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 15.0),
+                        child: Icon(
+                          Icons.pause_circle_rounded,
+                          size: 150,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      Text(
+                        "Workout Paused",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              exerciseTimerEnabled = true;
+                              Navigator.of(context).pop();
+                            },
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all<double>(5),
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              'Return to Workout',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all<double>(5),
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.red),
+                            ),
+                            child: const Text(
+                              'Give Up',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -67,72 +207,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         });
   }
 
-  Widget bottomBar() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          SizedBox(
-            height: 50,
-            width: MediaQuery.of(context).size.width * 0.3,
-            child: TextButton(
-              style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-              onPressed: () => changeExercise(false),
-              child: Icon(
-                Icons.chevron_left_rounded,
-                size: 30,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 50,
-            width: MediaQuery.of(context).size.width * 0.3,
-            child: ElevatedButton(
-              style: ButtonStyle(
-                elevation: MaterialStateProperty.all<double>(5),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-              onPressed: test,
-              child: Icon(
-                Icons.pause_rounded,
-                size: 30,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 50,
-            width: MediaQuery.of(context).size.width * 0.3,
-            child: TextButton(
-              style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-              onPressed: () => changeExercise(true),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 30,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+//Creates the card widget for each exercise in the global currentWorkout list
   Widget getExerciseCard(int index) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -148,165 +223,133 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  height: MediaQuery.of(context).size.height / 3,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image:
-                            AssetImage(global.currentWorkout[index].imageURL)),
-                    borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+                global.currentWorkout[index].exerciseType != ExerciseType.rest
+                    ? Container(
+                        height: MediaQuery.of(context).size.height / 3,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: AssetImage(
+                                  global.currentWorkout[index].imageURL)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(20.0)),
+                        ),
+                      )
+                    : SizedBox(),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      global.currentWorkout[index].exerciseType !=
+                              ExerciseType.rest
+                          ? Align(
+                              alignment: Alignment(1, -1),
+                              child: SizedBox(
+                                width: 104,
+                                child: TextButton(
+                                  onPressed: () {
+                                    exerciseInfo(index);
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Icon(Icons.more_horiz_rounded, size: 30),
+                                      Text("See more"),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : SizedBox(),
+                      Align(
+                        alignment: Alignment(0, -0.5),
+                        child: Text(
+                          global.currentWorkout[index].name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      global.currentWorkout[index].exerciseType ==
+                              ExerciseType.rest
+                          ? Align(
+                              alignment: Alignment(0, 0),
+                              child: SizedBox(
+                                width: 300,
+                                child: Text(
+                                  global.currentWorkout[index].description,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : SizedBox(),
+                      global.currentWorkout[index].exerciseType ==
+                              ExerciseType.rest
+                          ? Align(
+                              alignment: Alignment(0, 0.5),
+                              child: SizedBox(
+                                width: 300,
+                                child: Text(
+                                  "Next Exercise: " +
+                                      global.currentWorkout[index + 1].name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : SizedBox(),
+                    ],
                   ),
                 ),
-                Stack(
-                  children: [
-                    Align(
-                      alignment: Alignment(0, 0),
-                      child: Text(
-                        global.currentWorkout[index].name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 30,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        global.currentWorkout[index].currentValue.toString(),
+                        style: TextStyle(
+                          fontSize: 40,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    Align(
-                      alignment: Alignment(0.9, 0),
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ExerciseDetailsScreen(index: index),
-                            ),
-                          );
-                        },
-                        child: Icon(Icons.more_vert_rounded),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "30",
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Times",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    )
-                  ],
+                      Text(
+                        global.currentWorkout[index].exerciseType ==
+                                ExerciseType.strength
+                            ? "Times"
+                            : global.currentWorkout[index].currentValue == 1
+                                ? "Second"
+                                : "Seconds",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
                 Container(
-                    height: 30,
+                    height: global.currentWorkout[index].exerciseType ==
+                            ExerciseType.strength
+                        ? 15
+                        : 30,
                     child: ClipRRect(
                         borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(18),
                             bottomRight: Radius.circular(18)),
                         child: LinearProgressIndicator(
-                          value: null,
+                          value: 1 -
+                              (global.currentWorkout[index].currentValue /
+                                  global.currentWorkout[index].totalValue),
                         ))),
-
-                // Align(
-                //   alignment: Alignment(0, 1),
-                //   child: Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //     children: [
-                //       Expanded(
-                //         flex: 1,
-                //         child: SizedBox(
-                //           height: 50,
-                //           child: ElevatedButton(
-                //             onPressed: () {
-                //               changeExercise(true);
-                //             },
-                //             style: ButtonStyle(
-                //               backgroundColor:
-                //                   MaterialStateProperty.all<Color>(
-                //                       Colors.lightGreen[400]!),
-                //               shape: MaterialStateProperty.all<
-                //                   RoundedRectangleBorder>(
-                //                 RoundedRectangleBorder(
-                //                   borderRadius: BorderRadius.only(
-                //                     bottomLeft: Radius.circular(18.0),
-                //                     //bottomRight: Radius.circular(18.0)
-                //                   ),
-                //                 ),
-                //               ),
-                //             ),
-                //             child: Row(
-                //               mainAxisAlignment: MainAxisAlignment.center,
-                //               children: [
-                //                 Icon(Icons.check_rounded),
-                //                 Padding(
-                //                   padding:
-                //                       EdgeInsets.symmetric(horizontal: 5),
-                //                 ),
-                //                 const Text(
-                //                   'Done',
-                //                   style: TextStyle(fontSize: 22),
-                //                 ),
-                //               ],
-                //             ),
-                //           ),
-                //         ),
-                //       ),
-                //       Expanded(
-                //         flex: 1,
-                //         child: SizedBox(
-                //           height: 50,
-                //           child: ElevatedButton(
-                //             onPressed: () {
-                //               Navigator.push(
-                //                 context,
-                //                 MaterialPageRoute(
-                //                   builder: (context) =>
-                //                       ExerciseDetailsScreen(index: index),
-                //                 ),
-                //               );
-                //             },
-                //             style: ButtonStyle(
-                //               elevation: MaterialStateProperty.all<double>(0),
-                //               shape: MaterialStateProperty.all<
-                //                   RoundedRectangleBorder>(
-                //                 RoundedRectangleBorder(
-                //                   borderRadius: BorderRadius.only(
-                //                     // bottomLeft: Radius.circular(18.0),
-                //                     bottomRight: Radius.circular(18.0),
-                //                   ),
-                //                 ),
-                //               ),
-                //             ),
-                //             child: Row(
-                //               mainAxisAlignment: MainAxisAlignment.center,
-                //               children: [
-                //                 const Text(
-                //                   'More',
-                //                   style: TextStyle(fontSize: 22),
-                //                 ),
-                //                 Padding(
-                //                   padding:
-                //                       EdgeInsets.symmetric(horizontal: 5),
-                //                 ),
-                //                 Icon(Icons.chevron_right_rounded),
-                //               ],
-                //             ),
-                //           ),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -334,17 +377,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             ),
             Text(
               ' of ',
-              style: TextStyle(
-                  // fontWeight: FontWeight.bold,
-                  // color: Theme.of(context).colorScheme.primary
-                  ),
             ),
             Text(
-              '3',
-              style: TextStyle(
-                  // fontWeight: FontWeight.bold,
-                  // color: Theme.of(context).colorScheme.primary
-                  ),
+              global.currentWorkout.length.toString(),
             ),
           ],
         ),
@@ -367,7 +402,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 onPageChanged: (index, reason) =>
                     onCarouselPageChanged(index, reason),
               ),
-              itemCount: global.exerciseNames.length,
+              itemCount: global.currentWorkout.length,
               itemBuilder: ((context, index, ind) {
                 return getExerciseCard(index);
               }),
@@ -398,7 +433,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 ),
                 SizedBox(
                   height: 50,
-                  width: MediaQuery.of(context).size.width * 0.3,
+                  width: MediaQuery.of(context).size.width * 0.4,
                   child: ElevatedButton(
                     style: ButtonStyle(
                       elevation: MaterialStateProperty.all<double>(5),
@@ -411,22 +446,19 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     onPressed: () {
                       global.currentWorkout[currentExerciseIndex - 1]
                                   .exerciseType ==
-                              "Strength"
-                          ? test()
-                          : pauseWorkoutBottomSheet();
+                              ExerciseType.strength
+                          ? exerciseFinished()
+                          : pauseWorkout();
                     },
                     child: global.currentWorkout[currentExerciseIndex - 1]
                                 .exerciseType ==
-                            "Strength"
+                            ExerciseType.strength
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.done_rounded,
                                 size: 30,
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 5),
                               ),
                               Text(
                                 "Done",
@@ -440,9 +472,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               Icon(
                                 Icons.pause_rounded,
                                 size: 30,
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 5),
                               ),
                               Text(
                                 "Pause",
