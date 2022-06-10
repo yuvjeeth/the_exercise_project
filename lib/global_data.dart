@@ -36,6 +36,6 @@ List<Exercise> currentWorkout = [
       imageURL: exerciseImages[1],
       videoURL: exerciseVideoUrls[1],
       description: exerciseDescriptions[1],
-      exerciseType: ExerciseType.strength,
+      exerciseType: ExerciseType.cardio,
       totalValue: 30),
 ];

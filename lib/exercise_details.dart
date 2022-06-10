@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:the_exercise_project/models/exercise.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:the_exercise_project/global_data.dart' as global;
@@ -22,11 +23,15 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
 
   void test() {}
 
-
 //Launches Youtube for the video of the exercise
   void launchVideo() async {
     Uri url = Uri.parse(global.exerciseVideoUrls[widget.index]);
     if (!await launchUrl(url)) log('Could not launch $url');
+  }
+
+  void completeExercise() {
+    global.currentWorkout[widget.index].userValue = repCountValue;
+    Navigator.pop(context, "Completed");
   }
 
   @override
@@ -163,10 +168,14 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
                             child: Text(
-                              "How many repetitions could you do?",
+                              global.currentWorkout[widget.index]
+                                          .exerciseType ==
+                                      ExerciseType.strength
+                                  ? "How many times could you do?"
+                                  : "How many seconds could you do?",
                               style: TextStyle(fontSize: 18),
                             ),
                           ),
@@ -190,7 +199,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                             width: MediaQuery.of(context).size.width,
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.of(context).pop();
+                                completeExercise();
                               },
                               style: ButtonStyle(
                                 shape: MaterialStateProperty.all<

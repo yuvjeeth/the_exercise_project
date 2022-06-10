@@ -55,22 +55,30 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
 //Called after each exercise is successfully completed
-  void exerciseFinished() {
-    //Logic for saving the current exercise as done goes here
+  void exerciseFinished(bool customExerciseValue) {
+    if (customExerciseValue == false) {
+      global.currentWorkout[currentExerciseIndex - 1].userValue =
+          global.currentWorkout[currentExerciseIndex - 1].totalValue;
+    }
     carouselController.nextPage();
   }
 
 //Handles routing to the ExerciseDetails route and pauses the exercise timer
-  void exerciseInfo(int index) {
+  Future<void> exerciseInfo(int index) async {
     exerciseTimerEnabled = false;
-    Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (context) => ExerciseDetailsScreen(
-                  index: index,
-                )))
-        .then((value) {
-      exerciseTimerEnabled = true;
-    });
+    final completion = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ExerciseDetailsScreen(
+          index: index,
+        ),
+      ),
+    );
+
+    exerciseTimerEnabled = true;
+    if (completion != null) {
+      exerciseFinished(true);
+      log(completion);
+    }
   }
 
   void onCarouselPageChanged(int index, CarouselPageChangedReason reason) {
@@ -98,7 +106,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   .currentValue--; //Downtimer from exercise time to zero
             });
           } else {
-            exerciseFinished(); //If timer reaches zero, consider exercise is finished
+            exerciseFinished(
+                false); //If timer reaches zero, consider exercise is finished
             exerciseTimer.cancel();
           }
         }
@@ -261,7 +270,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                             )
                           : SizedBox(),
                       Align(
-                        alignment: Alignment(0, -0.5),
+                        alignment: global.currentWorkout[index].exerciseType !=
+                                ExerciseType.rest
+                            ? Alignment(0, 0)
+                            : Alignment(0, -0.5),
                         child: Text(
                           global.currentWorkout[index].name,
                           textAlign: TextAlign.center,
@@ -362,8 +374,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 5,
-        backgroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         centerTitle: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -393,7 +405,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               carouselController: carouselController,
               options: CarouselOptions(
                 height: MediaQuery.of(context).size.height / 1.5,
-                scrollPhysics: BouncingScrollPhysics(),
+                scrollPhysics: NeverScrollableScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 viewportFraction: 0.8,
                 enlargeCenterPage: true,
@@ -414,8 +426,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 SizedBox(
-                  height: 50,
-                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 70,
+                  width: MediaQuery.of(context).size.width * 0.2,
                   child: TextButton(
                     style: ButtonStyle(
                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -425,15 +437,20 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ),
                     ),
                     onPressed: () => changeExercise(false),
-                    child: Icon(
-                      Icons.chevron_left_rounded,
-                      size: 30,
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.chevron_left_rounded,
+                          size: 30,
+                        ),
+                        Text("Previous"),
+                      ],
                     ),
                   ),
                 ),
                 SizedBox(
-                  height: 50,
-                  width: MediaQuery.of(context).size.width * 0.4,
+                  height: 70,
+                  width: MediaQuery.of(context).size.width * 0.3,
                   child: ElevatedButton(
                     style: ButtonStyle(
                       elevation: MaterialStateProperty.all<double>(5),
@@ -447,7 +464,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       global.currentWorkout[currentExerciseIndex - 1]
                                   .exerciseType ==
                               ExerciseType.strength
-                          ? exerciseFinished()
+                          ? exerciseFinished(
+                              false) //Exercise successfully finished
                           : pauseWorkout();
                     },
                     child: global.currentWorkout[currentExerciseIndex - 1]
@@ -482,8 +500,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   ),
                 ),
                 SizedBox(
-                  height: 50,
-                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 70,
+                  width: MediaQuery.of(context).size.width * 0.2,
                   child: TextButton(
                     style: ButtonStyle(
                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -493,9 +511,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ),
                     ),
                     onPressed: () => changeExercise(true),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 30,
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 30,
+                        ),
+                        Text("Skip"),
+                      ],
                     ),
                   ),
                 ),
