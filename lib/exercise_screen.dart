@@ -51,7 +51,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
 //Changes the current exercise, if next is true goes next, else goes previous
   void changeExercise(bool next) {
-    next ? carouselController.nextPage() : carouselController.previousPage();
+    next
+        ? carouselController.nextPage(
+            duration: Duration(seconds: 1), curve: Curves.ease)
+        : carouselController.previousPage(
+            duration: Duration(seconds: 1), curve: Curves.ease);
   }
 
 //Called after each exercise is successfully completed
@@ -60,7 +64,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       global.currentWorkout[currentExerciseIndex - 1].userValue =
           global.currentWorkout[currentExerciseIndex - 1].totalValue;
     }
-    carouselController.nextPage();
+    carouselController.nextPage(
+        duration: Duration(seconds: 1), curve: Curves.ease);
   }
 
 //Handles routing to the ExerciseDetails route and pauses the exercise timer
@@ -349,19 +354,21 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   ),
                 ),
                 Container(
-                    height: global.currentWorkout[index].exerciseType ==
-                            ExerciseType.strength
-                        ? 15
-                        : 30,
-                    child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(18),
-                            bottomRight: Radius.circular(18)),
-                        child: LinearProgressIndicator(
-                          value: 1 -
-                              (global.currentWorkout[index].currentValue /
-                                  global.currentWorkout[index].totalValue),
-                        ))),
+                  height: global.currentWorkout[index].exerciseType ==
+                          ExerciseType.strength
+                      ? 15
+                      : 30,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(18),
+                        bottomRight: Radius.circular(18)),
+                    child: LinearProgressIndicator(
+                      value: 1 -
+                          (global.currentWorkout[index].currentValue /
+                              global.currentWorkout[index].totalValue),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
