@@ -53,9 +53,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   void changeExercise(bool next) {
     next
         ? carouselController.nextPage(
-            duration: Duration(seconds: 1), curve: Curves.ease)
+            duration: Duration(milliseconds: 700), curve: Curves.ease)
         : carouselController.previousPage(
-            duration: Duration(seconds: 1), curve: Curves.ease);
+            duration: Duration(milliseconds: 700), curve: Curves.ease);
   }
 
 //Called after each exercise is successfully completed
@@ -65,7 +65,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           global.currentWorkout[currentExerciseIndex - 1].totalValue;
     }
     carouselController.nextPage(
-        duration: Duration(seconds: 1), curve: Curves.ease);
+        duration: Duration(milliseconds: 700), curve: Curves.ease);
   }
 
 //Handles routing to the ExerciseDetails route and pauses the exercise timer
