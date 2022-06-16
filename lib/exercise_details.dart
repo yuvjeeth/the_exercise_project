@@ -42,12 +42,12 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Hero(
             tag: 'exerciseCard' + widget.index.toString(),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18.0),
-              ),
-              child: SingleChildScrollView(
+            child: SingleChildScrollView(
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -211,9 +211,18 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                                   ),
                                 ),
                               ),
-                              child: const Text(
-                                'Complete',
-                                style: TextStyle(fontSize: 22),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.done_rounded,
+                                    size: 30,
+                                  ),
+                                  const Text(
+                                    'Complete',
+                                    style: TextStyle(fontSize: 22),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
