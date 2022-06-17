@@ -123,7 +123,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 //Bring up a Bottom Sheet that shows that the workout session is paused
   void pauseWorkoutBottomSheet() {
     showModalBottomSheet<void>(
-        isDismissible: true,
+        isDismissible: false,
         context: context,
         elevation: 15,
         shape: RoundedRectangleBorder(
