@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:the_exercise_project/global_data.dart';
 
 class OutdoorExerciseScreen extends StatefulWidget {
   const OutdoorExerciseScreen({Key? key}) : super(key: key);
@@ -127,10 +128,15 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
           currentLatLng.longitude = position.longitude;
           if (isTracking) {
             distanceCovered += GeolocatorPlatform.instance.distanceBetween(
-                sportPoints.last.latitude,
-                sportPoints.last.latitude,
-                currentLatLng.latitude,
-                currentLatLng.longitude);
+                    sportPoints.isEmpty
+                        ? currentLatLng.latitude
+                        : sportPoints.last.latitude,
+                    sportPoints.isEmpty
+                        ? currentLatLng.longitude
+                        : sportPoints.last.longitude,
+                    currentLatLng.latitude,
+                    currentLatLng.longitude) /
+                1000;
             sportPoints.add(LatLng(position.latitude, position.longitude));
           }
         });
@@ -216,13 +222,30 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                               shape: MaterialStateProperty.all<
                                   RoundedRectangleBorder>(
                                 RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    side: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary)),
                               ),
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.white),
                             ),
-                            child: Text(
-                              'Resume $chosenSport',
-                              style: TextStyle(fontSize: 22),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.play_arrow_rounded,
+                                  size: 30,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 5),
+                                ),
+                                Text(
+                                  "Resume $chosenSport",
+                                  style: TextStyle(fontSize: 22),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -233,26 +256,36 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                           height: 50,
                           width: MediaQuery.of(context).size.width,
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              finishSport(chosenSport);
-                            },
-                            style: ButtonStyle(
-                              elevation: MaterialStateProperty.all<double>(5),
-                              shape: MaterialStateProperty.all<
-                                  RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                finishSport(chosenSport);
+                              },
+                              style: ButtonStyle(
+                                elevation: MaterialStateProperty.all<double>(5),
+                                shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
                                 ),
                               ),
-                              backgroundColor:
-                                  MaterialStateProperty.all(Colors.red),
-                            ),
-                            child: const Text(
-                              'End Session',
-                              style: TextStyle(fontSize: 22),
-                            ),
-                          ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.done_rounded,
+                                    size: 30,
+                                  ),
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 5),
+                                  ),
+                                  Text(
+                                    "Finish $chosenSport",
+                                    style: TextStyle(fontSize: 22),
+                                  ),
+                                ],
+                              )),
                         ),
                       ),
                     ],
@@ -412,7 +445,7 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                         children: [
                           Text("Distance Covered"),
                           Text(
-                            distanceCovered.toString(),
+                            distanceCovered.toStringAsFixed(2),
                             style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
@@ -486,25 +519,24 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                     urlTemplate:
                         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                     subdomains: ['a', 'b', 'c']),
-                MarkerLayerOptions(
-                  markers: [
-                        Marker(
-                          point: currentLatLng,
-                          builder: (context) => Container(
-                            child: Icon(
-                              Icons.circle,
-                              shadows: [
-                                Shadow(
-                                    offset: Offset.fromDirection(90, 3),
-                                    blurRadius: 3)
-                              ],
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ] +
-                      routeMarkers,
-                ),
+                MarkerLayerOptions(markers: [
+                  Marker(
+                    point: currentLatLng,
+                    builder: (context) => Container(
+                      child: Icon(
+                        Icons.circle,
+                        shadows: [
+                          Shadow(
+                              offset: Offset.fromDirection(90, 3),
+                              blurRadius: 3)
+                        ],
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ]
+                    //+ routeMarkers,
+                    ),
               ],
             ),
           ),
