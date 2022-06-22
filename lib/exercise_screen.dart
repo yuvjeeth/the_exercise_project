@@ -1,6 +1,3 @@
-//TODO
-//Pause workout timer when app goes into background
-
 import 'dart:async';
 import 'dart:developer';
 
@@ -74,7 +71,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     final completion = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ExerciseDetailsScreen(
-          index: index,
+          exerciseName: global.currentWorkout[index].name,
         ),
       ),
     );
@@ -223,12 +220,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
 //Creates the card widget for each exercise in the global currentWorkout list
   Widget getExerciseCard(int index) {
+    global.exercises.indexWhere(
+        (element) => element.name == global.currentWorkout[index].name);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
         height: MediaQuery.of(context).size.height / 2,
         child: Hero(
-          tag: 'exerciseCard' + index.toString(),
+          tag: 'exerciseCard' + global.currentWorkout[index].name,
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(

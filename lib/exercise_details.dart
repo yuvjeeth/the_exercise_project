@@ -9,28 +9,40 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:the_exercise_project/global_data.dart' as global;
 
 class ExerciseDetailsScreen extends StatefulWidget {
-  const ExerciseDetailsScreen({Key? key, required this.index})
+  const ExerciseDetailsScreen({Key? key, required this.exerciseName})
       : super(key: key);
 
-  final int index;
+  final String exerciseName;
 
   @override
   State<ExerciseDetailsScreen> createState() => _ExerciseDetailsScreen();
 }
 
 class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
+  int exerciseIndex = -1;
   int repCountValue = 0;
 
   void test() {}
 
+  @override
+  void initState() {
+    super.initState();
+    getExerciseIndexFromName();
+  }
+
+  void getExerciseIndexFromName() {
+    exerciseIndex = global.exercises
+        .indexWhere((element) => element.name == widget.exerciseName);
+  }
+
 //Launches Youtube for the video of the exercise
   void launchVideo() async {
-    Uri url = Uri.parse(global.exerciseVideoUrls[widget.index]);
+    Uri url = Uri.parse(global.exerciseVideoUrls[exerciseIndex]);
     if (!await launchUrl(url)) log('Could not launch $url');
   }
 
   void completeExercise() {
-    global.currentWorkout[widget.index].userValue = repCountValue;
+    global.exercises[exerciseIndex].userValue = repCountValue;
     Navigator.pop(context, "Completed");
   }
 
@@ -41,7 +53,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Hero(
-            tag: 'exerciseCard' + widget.index.toString(),
+            tag: 'exerciseCard' + widget.exerciseName,
             child: SingleChildScrollView(
               child: Card(
                 elevation: 8,
@@ -63,8 +75,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                                 ),
                                 image: DecorationImage(
                                   image: AssetImage(
-                                    global
-                                        .currentWorkout[widget.index].imageURL,
+                                    global.exercises[exerciseIndex].imageURL,
                                   ),
                                   fit: BoxFit.fitWidth,
                                 ),
@@ -97,7 +108,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15.0),
                           child: Text(
-                            global.currentWorkout[widget.index].name,
+                            global.exercises[exerciseIndex].name,
                             style: const TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
@@ -145,9 +156,9 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
                         child: Text(
-                          global.currentWorkout[widget.index].description,
+                          global.exercises[exerciseIndex].description,
                           textAlign: TextAlign.justify,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w300,
                           ),
@@ -171,8 +182,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                           Padding(
                             padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
                             child: Text(
-                              global.currentWorkout[widget.index]
-                                          .exerciseType ==
+                              global.exercises[exerciseIndex].exerciseType ==
                                       ExerciseType.strength
                                   ? "How many times could you do?"
                                   : "How many seconds could you do?",
