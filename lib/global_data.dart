@@ -2,6 +2,26 @@ library the_exercise_project.globals;
 
 import 'package:the_exercise_project/models/exercise.dart';
 
+List<String> dailyGreeting = [
+  "serene",
+  "marvellous",
+  "terrific",
+  "wonderful",
+  "thrilling",
+  "fantastic",
+  "satisfying"
+];
+
+List<String> dayOfWeek = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday"
+];
+
 List<String> exerciseNames = ["Push-ups", "Pull-ups"];
 
 List<String> exerciseImages = [
