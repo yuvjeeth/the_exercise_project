@@ -203,7 +203,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                   MaterialStateProperty.all(Colors.red),
                             ),
                             child: const Text(
-                              'Give Up',
+                              'End Workout',
                               style: TextStyle(fontSize: 22),
                             ),
                           ),
@@ -395,9 +395,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             ),
             Text(
               ' of ',
+              style: TextStyle(
+                color: Colors.black54,
+              ),
             ),
             Text(
               global.currentWorkout.length.toString(),
+              style: TextStyle(
+                color: Colors.black54,
+              ),
             ),
           ],
         ),
@@ -474,6 +480,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               false) //Exercise successfully finished
                           : pauseWorkout();
                     },
+                    
                     child: global.currentWorkout[currentExerciseIndex - 1]
                                 .exerciseType ==
                             ExerciseType.strength
