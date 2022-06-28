@@ -87,7 +87,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                               padding: const EdgeInsets.all(8.0),
                               child: Align(
                                 alignment: const Alignment(-1, -1),
-                                child: TextButton(
+                                child: ElevatedButton(
                                     style: ButtonStyle(
                                       elevation:
                                           MaterialStateProperty.all<double>(10),
@@ -170,7 +170,7 @@ class _ExerciseDetailsScreen extends State<ExerciseDetailsScreen> {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: Colors.lightBlue[100],
                         borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(18.0),
                           bottomRight: Radius.circular(18.0),
