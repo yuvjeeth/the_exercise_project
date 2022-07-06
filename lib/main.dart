@@ -1,8 +1,5 @@
+
 import 'package:flutter/material.dart';
-import 'package:the_exercise_project/exercise_screen.dart';
-import 'package:the_exercise_project/exercise_screen.dart';
-import 'package:the_exercise_project/exercise_details.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:the_exercise_project/home_screen.dart';
 
 void main() {
@@ -12,17 +9,17 @@ void main() {
 class MyApp extends StatelessWidget {
   MyApp({Key? key}) : super(key: key);
 
-  final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The Exercise Project',
       theme: ThemeData(
-        primarySwatch: Colors.orange,
+        primarySwatch: Colors.blue,
         fontFamily: 'Lato',
       ),
-      home: ExerciseScreen(),
+      home: HomeScreen(),
+      //home: ExerciseCatalog(),
+      //home: ExerciseScreen(),
     );
   }
 }

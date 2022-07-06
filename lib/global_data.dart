@@ -1,6 +1,8 @@
 library the_exercise_project.globals;
 
-import 'package:the_exercise_project/models/exercise.dart';
+import '/models/exercise.dart';
+
+import 'models/exercise_log_item.dart';
 
 List<String> dailyGreeting = [
   "serene",
@@ -36,7 +38,6 @@ List<String> exerciseVideoUrls = [
   "https://www.youtube.com/watch?v=IODxDxX7oi4&t=1s",
   "https://www.youtube.com/watch?v=eGo4IYlbE5g"
 ];
-//List<String> currentWorkout = ["Push-ups","Pull-Ups"];
 
 List<Exercise> exercises = [
   Exercise(
@@ -45,14 +46,14 @@ List<Exercise> exercises = [
       videoURL: exerciseVideoUrls[0],
       description: exerciseDescriptions[0],
       exerciseType: ExerciseType.strength,
-      totalValue: 30),
+      totalValueForSet: 30),
   Exercise(
       name: exerciseNames[1],
       imageURL: exerciseImages[1],
       videoURL: exerciseVideoUrls[1],
       description: exerciseDescriptions[1],
       exerciseType: ExerciseType.cardio,
-      totalValue: 30),
+      totalValueForSet: 30),
 ];
 
 List<Exercise> currentWorkout = [
@@ -62,17 +63,19 @@ List<Exercise> currentWorkout = [
       videoURL: exerciseVideoUrls[0],
       description: exerciseDescriptions[0],
       exerciseType: ExerciseType.strength,
-      totalValue: 30),
+      totalValueForSet: 30),
   Exercise(
       name: "Rest",
       description: "Take a breather and get ready for the next exercise",
       exerciseType: ExerciseType.rest,
-      totalValue: 30),
+      totalValueForSet: 30),
   Exercise(
       name: exerciseNames[1],
       imageURL: exerciseImages[1],
       videoURL: exerciseVideoUrls[1],
       description: exerciseDescriptions[1],
       exerciseType: ExerciseType.cardio,
-      totalValue: 30),
+      totalValueForSet: 30),
 ];
+
+List<ExerciseLogItem> userExerciseLog = [];

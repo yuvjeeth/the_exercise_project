@@ -8,7 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
-import 'package:the_exercise_project/global_data.dart';
+
 
 class OutdoorExerciseScreen extends StatefulWidget {
   const OutdoorExerciseScreen({Key? key}) : super(key: key);
@@ -18,6 +18,9 @@ class OutdoorExerciseScreen extends StatefulWidget {
 }
 
 class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
+  bool isPopping = false;
+  bool isActivityTakingPlace = false;
+
   LatLng currentLatLng = LatLng(0.0, 0.0);
   MapController mapController = MapController();
   CarouselController bottomBarController = CarouselController();
@@ -48,29 +51,50 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
   void initState() {
     super.initState();
     getCurrentLocation();
-    timeKeeper = StopWatchTimer(onChange: (value) {
-      setState(() {
-        timeElapsedString = StopWatchTimer.getDisplayTime(value);
-      });
+    timeKeeper = StopWatchTimer(onChangeRawSecond: (value) {
+      if (this.mounted) {
+        setState(() {
+          log('setState called from stopwatch');
+          timeElapsedString = StopWatchTimer.getDisplayTime(value * 1000);
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    super.dispose();
     timeKeeper.dispose();
     positionStream.cancel();
-    super.dispose();
+    mapController.dispose();
+  }
+
+  Future<bool> willPop() {
+    if (isActivityTakingPlace) {
+      if (isPopping == false) {
+        pauseSport();
+        return Future.value(false);
+      } else {
+        return Future.value(true);
+      }
+    } else {
+      return Future.value(true);
+    }
   }
 
   void test() {}
 
   void chooseSport(String sport) {
-    setState(() {
-      chosenSport = sport;
-    });
+    if (this.mounted) {
+      setState(() {
+        log('setState called from chooseSport');
+        chosenSport = sport;
+      });
+    }
   }
 
   void startSport(String sport) {
+    isActivityTakingPlace = true;
     bottomBarController.nextPage(
         duration: Duration(milliseconds: 700), curve: Curves.ease);
     gpsLocationSettings = LocationSettings(
@@ -89,9 +113,11 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
   void pauseSport() {
     isTracking = false;
     timeKeeper.onExecute.add(StopWatchExecute.stop);
+    pauseWorkoutBottomSheet();
   }
 
   void finishSport(String sport) {
+    isActivityTakingPlace = true;
     bottomBarController.animateToPage(0,
         duration: Duration(milliseconds: 700), curve: Curves.ease);
     timeKeeper.onExecute.add(StopWatchExecute.reset);
@@ -123,29 +149,33 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
         Geolocator.getPositionStream(locationSettings: gpsLocationSettings)
             .listen((Position? position) {
       if (position != null) {
-        setState(() {
-          currentLatLng.latitude = position.latitude;
-          currentLatLng.longitude = position.longitude;
-          if (isTracking) {
-            distanceCovered += GeolocatorPlatform.instance.distanceBetween(
-                    sportPoints.isEmpty
-                        ? currentLatLng.latitude
-                        : sportPoints.last.latitude,
-                    sportPoints.isEmpty
-                        ? currentLatLng.longitude
-                        : sportPoints.last.longitude,
-                    currentLatLng.latitude,
-                    currentLatLng.longitude) /
-                1000;
-            sportPoints.add(LatLng(position.latitude, position.longitude));
-          }
-        });
+        if (this.mounted) {
+          setState(() {
+            log('setState called from GPS location update');
+            currentLatLng.latitude = position.latitude;
+            currentLatLng.longitude = position.longitude;
+            if (isTracking) {
+              distanceCovered += GeolocatorPlatform.instance.distanceBetween(
+                      sportPoints.isEmpty
+                          ? currentLatLng.latitude
+                          : sportPoints.last.latitude,
+                      sportPoints.isEmpty
+                          ? currentLatLng.longitude
+                          : sportPoints.last.longitude,
+                      currentLatLng.latitude,
+                      currentLatLng.longitude) /
+                  1000;
+              sportPoints.add(LatLng(position.latitude, position.longitude));
+            }
+          });
+        }
       }
       log(position == null
           ? 'Unknown'
           : 'Auto Update ${position.latitude.toString()}, ${position.longitude.toString()}');
+      mapController.moveAndRotate(
+          LatLng(position!.latitude, position.longitude), 16, 0);
     });
-    mapController.moveAndRotate(currentLatLng, 16, 0);
   }
 
   void makeRouteMarkers() {
@@ -229,8 +259,6 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                                           .primary),
                                 ),
                               ),
-                              backgroundColor:
-                                  MaterialStateProperty.all(Colors.white),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -244,7 +272,9 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                                 ),
                                 Text(
                                   "Resume $chosenSport",
-                                  style: TextStyle(fontSize: 22),
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                  ),
                                 ),
                               ],
                             ),
@@ -257,36 +287,40 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                           height: 50,
                           width: MediaQuery.of(context).size.width,
                           child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                finishSport(chosenSport);
-                              },
-                              style: ButtonStyle(
-                                elevation: MaterialStateProperty.all<double>(5),
-                                shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
+                            onPressed: () {
+                              isPopping = true;
+                              finishSport(chosenSport);
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                            },
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all<double>(5),
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.done_rounded,
-                                    size: 30,
-                                  ),
-                                  Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 5),
-                                  ),
-                                  Text(
-                                    "Finish $chosenSport",
-                                    style: TextStyle(fontSize: 22),
-                                  ),
-                                ],
-                              )),
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.green),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.done_rounded,
+                                  size: 30,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 5),
+                                ),
+                                Text(
+                                  "Finish $chosenSport",
+                                  style: TextStyle(fontSize: 22),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -463,7 +497,6 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     pauseSport();
-                    pauseWorkoutBottomSheet();
                   },
                   style: ButtonStyle(
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -501,55 +534,66 @@ class _OutdoorExerciseScreen extends State<OutdoorExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: bottomBar(),
-      extendBody: true,
-      body: Stack(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: FlutterMap(
-              mapController: mapController,
-              options: MapOptions(
-                minZoom: 10.0,
-                maxZoom: 18,
-                center: currentLatLng,
-              ),
-              layers: [
-                TileLayerOptions(
-                    urlTemplate:
-                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                    subdomains: ['a', 'b', 'c']),
-                MarkerLayerOptions(markers: [
-                  Marker(
-                    point: currentLatLng,
-                    builder: (context) => Container(
-                      child: Icon(
-                        Icons.circle,
-                        shadows: [
-                          Shadow(
-                              offset: Offset.fromDirection(90, 3),
-                              blurRadius: 3)
-                        ],
-                        color: Colors.blue,
+    return WillPopScope(
+      onWillPop: willPop,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          iconTheme:
+              IconThemeData(color: Theme.of(context).colorScheme.primary),
+          centerTitle: true,
+        ),
+        extendBodyBehindAppBar: true,
+        bottomNavigationBar: bottomBar(),
+        extendBody: true,
+        body: Stack(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: FlutterMap(
+                mapController: mapController,
+                options: MapOptions(
+                  minZoom: 10.0,
+                  maxZoom: 18,
+                  center: currentLatLng,
+                ),
+                layers: [
+                  TileLayerOptions(
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      subdomains: ['a', 'b', 'c']),
+                  MarkerLayerOptions(markers: [
+                    Marker(
+                      point: currentLatLng,
+                      builder: (context) => Container(
+                        child: Icon(
+                          Icons.circle,
+                          shadows: [
+                            Shadow(
+                                offset: Offset.fromDirection(90, 3),
+                                blurRadius: 3)
+                          ],
+                          color: Colors.blue,
+                        ),
                       ),
                     ),
-                  ),
-                ]
-                    //+ routeMarkers,
-                    ),
-              ],
+                  ]
+                      //+ routeMarkers,
+                      ),
+                ],
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment(0.9, 0.3),
-            child: FloatingActionButton(
-              mini: true,
-              onPressed: getCurrentLocation,
-              child: Icon(Icons.my_location_rounded),
+            Align(
+              alignment: Alignment(0.9, 0.3),
+              child: FloatingActionButton(
+                mini: true,
+                onPressed: getCurrentLocation,
+                child: Icon(Icons.my_location_rounded),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+!.flutter-plugins-dependencies
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
@@ -273,6 +274,7 @@ xcuserdata/
 .flutter-plugins-dependencies
 .flutter-plugins-dependencies
 .gitignore
+.flutter-plugins-dependencies
 .flutter-plugins-dependencies
 .flutter-plugins-dependencies
 .flutter-plugins-dependencies

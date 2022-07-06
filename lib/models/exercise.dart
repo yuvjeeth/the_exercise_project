@@ -1,5 +1,3 @@
-import 'package:flutter/cupertino.dart';
-
 enum ExerciseType { cardio, strength, rest }
 
 class Exercise {
@@ -9,16 +7,16 @@ class Exercise {
       this.videoURL = "",
       required this.description,
       required this.exerciseType,
-      this.totalValue = 0,
-      this.currentValue = 0,
-      this.userValue = 0});
+      this.totalValueForSet = 0,
+      this.currentValueInSet = 0,
+      this.userValueInSet = 0});
 
-  String name;
-  String imageURL;
-  String videoURL;
-  String description;
-  ExerciseType exerciseType;
-  int totalValue;
-  int currentValue;
-  int userValue;
+  String name; //Name of the exercise
+  String imageURL; //URL of Image
+  String videoURL; //URL of YouTube Video
+  String description; //Description of the exercise
+  ExerciseType exerciseType; //Cardio / Strength / Rest
+  int totalValueForSet; //The total reps/seconds user has to perform in the set
+  int currentValueInSet; //Applicable for cardio and rest - time left to complete set
+  int userValueInSet; //Reps/Seconds user performed in the set
 }
